@@ -36,7 +36,7 @@ The Task Management API allows users to manage tasks efficiently. Each user must
 * password (String): User's encrypted password.
 * tasks (List<Task>): List of tasks created by the user.
 
-2.   **Task**
+2. **Task**
 
  Represents a task that the user can create, update, or delete.
 

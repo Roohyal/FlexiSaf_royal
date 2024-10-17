@@ -34,9 +34,12 @@ public class PersonServiceImpl implements PersonService {
         String hashedPassword = BCrypt.hashpw(personRegisterRequest.getPassword(), BCrypt.gensalt());
 
         Person person = Person.builder()
-                .fullName(personRegisterRequest.getFullName())
+                .firstName(personRegisterRequest.getFirstName())
+                .lastName(personRegisterRequest.getLastName())
                 .email(personRegisterRequest.getEmail())
                 .password(hashedPassword)
+                .address(personRegisterRequest.getAddress())
+                .dateOfBirth(personRegisterRequest.getDateOfBirth())
                 .gender(personRegisterRequest.getGender())
                 .phoneNumber(personRegisterRequest.getPhoneNumber())
                 .build();

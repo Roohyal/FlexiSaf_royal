@@ -9,6 +9,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -16,7 +18,11 @@ import lombok.*;
 @Builder
 public class PersonRegisterRequest {
     @NotBlank(message = "Full name is required")
-    private String fullName;
+    private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    private String lastName;
+
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email Format is Wrong ")
@@ -32,4 +38,8 @@ public class PersonRegisterRequest {
 
     @Transient
     private String confirmPassword;
+
+    private String address;
+
+    private LocalDate dateOfBirth;
 }
