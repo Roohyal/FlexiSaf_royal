@@ -12,14 +12,26 @@ import org.springframework.context.annotation.Configuration;
 public class SwaggerConfig {
 
     @Bean
-    public OpenAPI createOpenAPIConfig() {
+    public OpenAPI createOpenAPIConfig(){
+        //This creates an OpenAPI object
         return new OpenAPI()
-                // General API information
-                .info(new Info()
-                        .title("Task Management API")
+                //This sets general information about the API
+                .info(new Info().title("Task it ")
                         .version("1.0")
-                        .description("API documentation for a Task management application"));
-
-
+                        .description("A Task management Api"))
+                //This adds a security schemes component
+                .components(new Components()
+                        .addSecuritySchemes("bearer-jwt", new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")
+                                .in(SecurityScheme.In.HEADER)
+                                .name("Authorization")
+                        )
+                )
+                //Add security requirement to use JWT bearer token for all endpoints
+                .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"));
     }
+
+
 }

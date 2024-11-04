@@ -1,8 +1,8 @@
-# **Task Management API**
+# **Task it**
 
  ## **Overview**
 
-The Task Management API allows users to manage tasks efficiently. Each user must sign up and log in before they can create tasks. The API supports functionalities like user authentication, task creation, task assignment, and task management.
+This Task Management API allows users to manage tasks efficiently. Each user must sign up and log in before they can create tasks. The API supports functionalities like user authentication, task creation, task assignment, and task management.
 
 ## **Features**
 
@@ -58,4 +58,42 @@ Fields:
 
 * Java 17+
 * Maven
-* Swagger
+* Swagger(for API testing)
+
+# Setup
+1. #### Clone the Repository:
+
+`git clone <repository-url>` 
+
+`~cd task-management-api`
+2. #### Build the Project:
+
+
+`mvn clean install`
+3. #### Run the Application:
+
+`mvn spring-boot:run`
+
+4. #### Access the API Documentation:
+* Once the server is running, go to http://localhost:8080/swagger-ui.html to view and test the API endpoints.
+
+### User Flow
+1. ##### Register:
+
+* Use the `/register` endpoint to create a new user. Provide the required user details in the request body.
+
+2. #### Confirm Email:
+
+* After registration, check your email for a confirmation link. Clicking the link will verify your email address and activate your account.
+3. #### Login:
+
+* Use the `/login` endpoint with your registered email and password to log in.
+* After logging in, copy the token returned in the response. This token is needed for authenticated requests.
+4. #### Use Token for Authenticated Actions:
+
+ * For any other operations (like creating or managing tasks), include the token in the `Authorization` header with the `Bearer` prefix:
+
+`Authorization: Bearer <your-token>`
+5. #### Task Management:
+
+* Once logged in, you can use endpoints to create, view, update, and delete tasks as described in the API documentation.

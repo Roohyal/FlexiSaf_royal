@@ -7,12 +7,14 @@ import jakarta.persistence.Enumerated;
 import lombok.*;
 
 import java.time.LocalDate;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TaskRequest {
+public class TaskUpdateRequest {
+
     private String taskName;
 
     private String taskDescription;
@@ -24,6 +26,5 @@ public class TaskRequest {
     private Priority priority;
 
     private LocalDate deadline;
-
 
 }

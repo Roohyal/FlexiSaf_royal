@@ -5,18 +5,20 @@ import com.mathias.flexisaf.payload.request.PersonRegisterRequest;
 import com.mathias.flexisaf.payload.response.LoginResponse;
 import com.mathias.flexisaf.payload.response.PersonRegisterResponse;
 import com.mathias.flexisaf.service.PersonService;
+import com.mathias.flexisaf.service.TokenValidationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.token.TokenService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
-public class PersonController {
+public class AuthController {
     private final PersonService personService;
+    private final TokenValidationService tokenValidationService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody PersonRegisterRequest person) throws Exception {
@@ -32,4 +34,15 @@ public class PersonController {
 
         return ResponseEntity.ok(response);
    }
+
+   @GetMapping("/confirm")
+    public ResponseEntity<?> confirmUser(@RequestParam("token") String token){
+       String result = tokenValidationService.validateToken(token);
+       if ("Email confirmed successfully".equals(result)) {
+           return ResponseEntity.ok(Collections.singletonMap("message", result));
+       } else {
+           return ResponseEntity.badRequest().body(Collections.singletonMap("message", result));
+       }
+   }
+
 }

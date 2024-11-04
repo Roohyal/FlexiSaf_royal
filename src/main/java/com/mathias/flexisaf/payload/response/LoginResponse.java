@@ -10,4 +10,5 @@ import lombok.*;
 public class LoginResponse {
     private String responseCode;
     private String responseMessage;
+    private LoginInfo loginInfo;
 }
