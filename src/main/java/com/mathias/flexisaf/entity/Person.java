@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 @Entity
@@ -41,6 +42,13 @@ public class Person extends BaseClass implements UserDetails {
     private String address;
 
     private LocalDate dateOfBirth;
+
+
+    // this token is to handle reset password
+    private String resetToken;
+
+    // monitor token creation time and expiration time
+    private LocalDateTime resetTokenCreationTime;
 
     @Transient
     private String confirmPassword;

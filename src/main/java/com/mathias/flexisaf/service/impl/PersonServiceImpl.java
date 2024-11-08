@@ -8,15 +8,17 @@ import com.mathias.flexisaf.exceptions.AlreadyExistsException;
 import com.mathias.flexisaf.exceptions.NotEnabledException;
 import com.mathias.flexisaf.exceptions.NotFoundException;
 import com.mathias.flexisaf.infrastructure.config.JwtService;
-import com.mathias.flexisaf.payload.request.LoginRequest;
-import com.mathias.flexisaf.payload.request.PersonRegisterRequest;
+import com.mathias.flexisaf.payload.request.*;
 import com.mathias.flexisaf.payload.response.LoginInfo;
 import com.mathias.flexisaf.payload.response.LoginResponse;
 import com.mathias.flexisaf.payload.response.PersonRegisterResponse;
 import com.mathias.flexisaf.repository.ConfirmationTokenRepository;
 import com.mathias.flexisaf.repository.JTokenRepository;
 import com.mathias.flexisaf.repository.PersonRepository;
+import com.mathias.flexisaf.service.EmailService;
 import com.mathias.flexisaf.service.PersonService;
+import com.mathias.flexisaf.utils.EmailUtil;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +26,10 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,6 +43,8 @@ public class PersonServiceImpl implements PersonService {
     private final JTokenRepository jTokenRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
+    private final EmailUtil emailUtil;
 
     @Override
     public PersonRegisterResponse registerPerson(PersonRegisterRequest personRegisterRequest) throws Exception {
@@ -81,9 +88,21 @@ public class PersonServiceImpl implements PersonService {
         ConfirmationTokenModel confirmationTokenModel = new ConfirmationTokenModel(savedPerson);
         confirmationTokenRepository.save(confirmationTokenModel);
 
+        String confirmationUrl = emailUtil.getVerificationUrl(confirmationTokenModel.getToken());
+
+        EmailDetails emailDetails = EmailDetails.builder()
+                .fullname(savedPerson.getFirstName() + " " + savedPerson.getLastName())
+                .recipient(savedPerson.getEmail())
+                .subject("TASK IT!!! ACCOUNT CREATED SUCCESSFULLY")
+                .link(confirmationUrl)
+                .build();
+
+        emailService.sendEmailAlert(emailDetails,"email_verification");
+
+
         return PersonRegisterResponse.builder()
                 .responseCode("001")
-                .responseMessage("Congratulations! You have successfully registered!, Kindly Login, Confirm and Login  ")
+                .responseMessage("You have been registered successfully, Kindly check your email ")
                 .build();
     }
 
@@ -130,12 +149,61 @@ public class PersonServiceImpl implements PersonService {
 
         return LoginResponse.builder()
                 .responseCode("002")
-                .responseMessage("Your have been login successfully")
+                .responseMessage("Your have logged in  successfully")
                 .loginInfo(LoginInfo.builder()
                         .email(person.getEmail())
                         .token(jwtToken)
                         .build())
                 .build();
+    }
+
+    @Override
+    public String forgotPassword(ForgetPasswordRequestDto forgetpassword) throws MessagingException {
+        Person person = personRepository.findByEmail(forgetpassword.getEmail())
+                .orElseThrow(()-> new NotFoundException("User is not found"));
+
+        String token = UUID.randomUUID().toString();
+        person.setResetToken(token);
+        person.setResetTokenCreationTime(LocalDateTime.now());
+        personRepository.save(person);
+
+        String resetUrl = emailUtil.getResetUrl(token);
+
+        EmailDetails emailDetails = EmailDetails.builder()
+                .fullname(person.getFirstName() + " " + person.getLastName())
+                .recipient(person.getEmail())
+                .subject("TASK IT!!! RESET YOUR PASSWORD ")
+                .link(resetUrl)
+                .build();
+
+        emailService.sendEmailAlert(emailDetails,"forgot_password");
+
+
+        return "A reset password link has been sent to your account email address";
+    }
+
+    @Override
+    public String resetPassword(ResetPasswordRequestDto resetpassword) {
+
+        Person person =  personRepository.findByResetToken(resetpassword.getToken()).orElseThrow(()-> new NotFoundException("User is not found"));
+
+        if (Duration.between(person.getResetTokenCreationTime(), LocalDateTime.now()).toMinutes() > 5) {
+            person.setResetToken(null);
+            personRepository.save(person);
+            throw new NotEnabledException("Token has expired!");
+        }
+        if(!resetpassword.getPassword().equals(resetpassword.getConfirmPassword())){
+            throw new NotEnabledException("Confirmation Password does not match!");
+        }
+
+        person.setPassword(passwordEncoder.encode(resetpassword.getPassword()));
+
+        // set the reset token to null
+        person.setResetToken(null);
+
+        personRepository.save(person);
+
+        return "Password Reset is Successful";
     }
 
 }

@@ -1,14 +1,16 @@
 package com.mathias.flexisaf.infrastructure.controller;
 
+import com.mathias.flexisaf.payload.request.ForgetPasswordRequestDto;
 import com.mathias.flexisaf.payload.request.LoginRequest;
 import com.mathias.flexisaf.payload.request.PersonRegisterRequest;
+import com.mathias.flexisaf.payload.request.ResetPasswordRequestDto;
 import com.mathias.flexisaf.payload.response.LoginResponse;
 import com.mathias.flexisaf.payload.response.PersonRegisterResponse;
 import com.mathias.flexisaf.service.PersonService;
 import com.mathias.flexisaf.service.TokenValidationService;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -45,4 +47,19 @@ public class AuthController {
        }
    }
 
+   @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgetPasswordRequestDto requestDto) throws MessagingException {
+
+        String response = personService.forgotPassword(requestDto);
+
+        return ResponseEntity.ok(response);
+
+   }
+
+   @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequestDto requestDto) {
+       String response = personService.resetPassword(requestDto);
+
+       return ResponseEntity.ok(response);
+   }
 }
