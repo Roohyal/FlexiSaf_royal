@@ -1,5 +1,7 @@
 package com.mathias.flexisaf.infrastructure.controller;
 
+import com.mathias.flexisaf.entity.Task;
+import com.mathias.flexisaf.enums.Status;
 import com.mathias.flexisaf.payload.request.TaskRequest;
 import com.mathias.flexisaf.payload.request.TaskUpdateRequest;
 import com.mathias.flexisaf.payload.response.TaskListResponse;
@@ -48,4 +50,50 @@ public class TaskController {
         taskService.updateTask(taskRequest,currentUsername,taskId);
         return "Task has been updated successfully";
     }
+
+    @GetMapping("/get-current-user-tasks")
+    public ResponseEntity<?> getCurrentUserTasks(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        List<TaskListResponse> taskResponse = taskService.getCurrentUserTasks(currentUsername);
+        return ResponseEntity.ok(taskResponse);
+    }
+
+    @GetMapping("/filter-by-status")
+    public ResponseEntity<?> filterByStatus(@RequestParam Status status){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        List<TaskListResponse> response = taskService.getTasksByCurrentUserAndStatus(currentUsername,status);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/get-completed-tasks")
+    public ResponseEntity<?> getCompletedTasks(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        List<TaskListResponse> response = taskService.getCompletedTasksForCurrentUser(currentUsername);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/update-status")
+    public ResponseEntity<?> updateStatus(@RequestParam Long taskId, @RequestParam Status status){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        Task updateTask = taskService.updateTaskStatus(taskId,status,currentUsername);
+        return ResponseEntity.ok(updateTask);
+    }
+
+   @GetMapping("/search")
+    public ResponseEntity<?> searchTask(@RequestParam(required = false) Long id,
+                                        @RequestParam(required = false) String title){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        Task task = taskService.getTaskById(id, title, currentUsername);
+       if (task != null) {
+           return ResponseEntity.ok(task);
+       } else {
+           return ResponseEntity.notFound().build();
+       }
+
+   }
 }

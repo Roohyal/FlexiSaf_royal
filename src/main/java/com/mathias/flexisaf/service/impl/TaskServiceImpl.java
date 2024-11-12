@@ -2,6 +2,7 @@ package com.mathias.flexisaf.service.impl;
 
 import com.mathias.flexisaf.entity.Person;
 import com.mathias.flexisaf.entity.Task;
+import com.mathias.flexisaf.enums.Status;
 import com.mathias.flexisaf.exceptions.NotFoundException;
 import com.mathias.flexisaf.payload.request.TaskRequest;
 import com.mathias.flexisaf.payload.request.TaskUpdateRequest;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class TaskServiceImpl implements TaskService {
                 .taskName(taskRequest.getTaskName())
                 .taskDescription(taskRequest.getTaskDescription())
                 .priority(taskRequest.getPriority())
-                .status(taskRequest.getStatus())
+                .status(Status.PENDING)
                 .deadline(taskRequest.getDeadline())
                 .user(person)
                 .build();
@@ -88,5 +90,86 @@ public class TaskServiceImpl implements TaskService {
         taskRepository.save(task);
 
     }
+
+    @Override
+    public List<TaskListResponse> getCurrentUserTasks(String email) {
+        personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
+
+        List<Task> tasks = taskRepository.findByUserEmail(email);
+
+
+        // Use the builder pattern for each Task and collect as TaskListResponse
+        return tasks.stream()
+                .map(task -> TaskListResponse.builder()
+                        .taskName(task.getTaskName())          // Assuming TaskListResponse has an ID field// Set other relevant fields as needed
+                        .taskDescription(task.getTaskDescription())
+                        .taskStatus(task.getStatus())
+                        .priority(task.getPriority())
+                        .deadline(task.getDeadline())
+                        .build()
+                )
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TaskListResponse> getTasksByCurrentUserAndStatus(String email, Status status) {
+        personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
+
+        List<Task> tasks = taskRepository.findByUserEmailAndStatus(email, status);
+
+        return tasks.stream()
+                .map(task -> TaskListResponse.builder()
+                        .taskName(task.getTaskName())          // Assuming TaskListResponse has an ID field// Set other relevant fields as needed
+                        .taskDescription(task.getTaskDescription())
+                        .taskStatus(task.getStatus())
+                        .priority(task.getPriority())
+                        .deadline(task.getDeadline())
+                        .build()
+                )
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TaskListResponse> getCompletedTasksForCurrentUser(String email) {
+        personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
+
+        List<Task> tasks = taskRepository.findByUserEmailAndStatus(email, Status.COMPLETED);
+
+        return tasks.stream()
+                .map(task -> TaskListResponse.builder()
+                        .taskName(task.getTaskName())
+                        .taskDescription(task.getTaskDescription())
+                        .taskStatus(task.getStatus())
+                        .priority(task.getPriority())
+                        .deadline(task.getDeadline())
+                        .build()
+                )
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Task updateTaskStatus(Long taskId, Status status, String email) {
+
+        personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
+
+        Task task = taskRepository.findById(taskId).orElseThrow(()-> new NotFoundException("Task not found"));
+
+        task.setStatus(status);
+
+        return taskRepository.save(task);
+    }
+
+    @Override
+    public Task getTaskById(Long taskId, String title, String email) {
+        if (taskId != null) {
+            return taskRepository.findById(taskId)
+                    .orElseThrow(() -> new NotFoundException("Task not found with id " + taskId));
+        } else if (title != null && !title.isEmpty()) {
+            return taskRepository.findByTaskName(title)
+                    .orElseThrow(() -> new NotFoundException("Task not found with title " + title));
+        }
+        throw new IllegalArgumentException("Both id and title are null");
+    }
+
 
 }

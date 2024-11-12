@@ -19,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+import static org.springframework.security.config.Customizer.*;
 
 @Configuration
 @EnableWebSecurity
@@ -54,6 +55,8 @@ public class SecurityConfig {
                                 .authenticated()
 
                 )
+                .oauth2Login(withDefaults())
+                .formLogin(withDefaults())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session
