@@ -2,6 +2,7 @@ package com.mathias.flexisaf.service.impl;
 
 import com.mathias.flexisaf.entity.Person;
 import com.mathias.flexisaf.entity.Task;
+import com.mathias.flexisaf.enums.Priority;
 import com.mathias.flexisaf.enums.Status;
 import com.mathias.flexisaf.exceptions.NotFoundException;
 import com.mathias.flexisaf.payload.request.TaskRequest;
@@ -33,8 +34,8 @@ public class TaskServiceImpl implements TaskService {
 
 
         Task task = Task.builder()
-                .taskName(taskRequest.getTaskName())
-                .taskDescription(taskRequest.getTaskDescription())
+                .taskName(cleanInput(taskRequest.getTaskName()))
+                .taskDescription(cleanInput(taskRequest.getTaskDescription()))
                 .priority(taskRequest.getPriority())
                 .status(Status.PENDING)
                 .deadline(taskRequest.getDeadline())
@@ -81,8 +82,8 @@ public class TaskServiceImpl implements TaskService {
         personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
         Task task = taskRepository.findById(id).orElseThrow(()-> new NotFoundException("Task not found"));
 
-        task.setTaskName(taskRequest.getTaskName());
-        task.setTaskDescription(taskRequest.getTaskDescription());
+        task.setTaskName(cleanInput(taskRequest.getTaskName()));
+        task.setTaskDescription(cleanInput(taskRequest.getTaskDescription()));
         task.setPriority(taskRequest.getPriority());
         task.setDeadline(taskRequest.getDeadline());
         task.setStatus(taskRequest.getStatus());
@@ -171,5 +172,30 @@ public class TaskServiceImpl implements TaskService {
         throw new IllegalArgumentException("Both id and title are null");
     }
 
+    @Override
+    public List<TaskListResponse> getTasksByCurrentUserandPriority(String email, Priority priority) {
+        personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
+
+        List<Task> tasks = taskRepository.findByUserEmailAndPriority(email, priority);
+
+        return tasks.stream()
+                .map(task -> TaskListResponse.builder()
+                        .taskName(task.getTaskName())
+                        .taskDescription(task.getTaskDescription())
+                        .taskStatus(task.getStatus())
+                        .priority(task.getPriority())
+                        .deadline(task.getDeadline())
+                        .build()
+                )
+                .collect(Collectors.toList());
+
+
+    }
+
+
+    // Helper method to trim and remove extra spaces
+    private String cleanInput(String input) {
+        return input == null ? null : input.trim().replaceAll("\\s+", " ");
+    }
 
 }

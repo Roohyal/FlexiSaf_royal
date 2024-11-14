@@ -1,6 +1,7 @@
 package com.mathias.flexisaf.infrastructure.controller;
 
 import com.mathias.flexisaf.entity.Task;
+import com.mathias.flexisaf.enums.Priority;
 import com.mathias.flexisaf.enums.Status;
 import com.mathias.flexisaf.payload.request.TaskRequest;
 import com.mathias.flexisaf.payload.request.TaskUpdateRequest;
@@ -95,5 +96,13 @@ public class TaskController {
            return ResponseEntity.notFound().build();
        }
 
+   }
+
+   @GetMapping("/filter-by-priority")
+    public ResponseEntity<?> filterByPriority(@RequestParam Priority priority){
+       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+       String currentUsername = authentication.getName();
+       List<TaskListResponse> response = taskService.getTasksByCurrentUserandPriority(currentUsername,priority);
+       return ResponseEntity.ok(response);
    }
 }

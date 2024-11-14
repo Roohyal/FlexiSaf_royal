@@ -1,6 +1,7 @@
 package com.mathias.flexisaf.service;
 
 import com.mathias.flexisaf.entity.Task;
+import com.mathias.flexisaf.enums.Priority;
 import com.mathias.flexisaf.enums.Status;
 import com.mathias.flexisaf.payload.request.TaskRequest;
 import com.mathias.flexisaf.payload.request.TaskUpdateRequest;
@@ -27,6 +28,8 @@ public interface TaskService {
     Task updateTaskStatus(Long taskId, Status status, String email);
 
     Task getTaskById(Long taskId, String title, String email);
+
+    List<TaskListResponse> getTasksByCurrentUserandPriority(String email, Priority priority);
 
 
 }

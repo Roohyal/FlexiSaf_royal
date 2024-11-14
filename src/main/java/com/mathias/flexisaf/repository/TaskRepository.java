@@ -1,6 +1,7 @@
 package com.mathias.flexisaf.repository;
 
 import com.mathias.flexisaf.entity.Task;
+import com.mathias.flexisaf.enums.Priority;
 import com.mathias.flexisaf.enums.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -15,4 +16,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
 
     Optional<Task> findByTaskName(String taskName);
+
+    List<Task> findByUserEmailAndPriority(String email, Priority priority);
 }

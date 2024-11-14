@@ -86,8 +86,15 @@
 <!--        <dependency>-->
 <!--            <groupId>org.flywaydb</groupId>-->
 <!--            <artifactId>flyway-core</artifactId>-->
-<!--            <version>10.20.0</version>-->
+<!--            <version>9.22.0</version> &lt;!&ndash; Check the latest version in case there's an update &ndash;&gt;-->
 <!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.flywaydb.database</groupId>-->
+<!--            <artifactId>flyway-database-postgresql</artifactId>-->
+<!--            <version>9.22.0</version> &lt;!&ndash; Check the latest version in case there's an update &ndash;&gt;-->
+<!--        </dependency>-->
+
 
         <dependency>
             <groupId>org.springframework.security</groupId>
