@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
 @Table
 @Getter
@@ -26,6 +28,11 @@ public class Task extends BaseClass{
     private Priority priority;
 
     private LocalDate deadline;
+
+    private boolean deleted = false;
+
+    @Column(nullable = true)
+    private LocalDateTime deletedAt;
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "user_id")

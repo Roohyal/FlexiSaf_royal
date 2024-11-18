@@ -14,7 +14,7 @@ import java.util.List;
 public interface TaskService {
     TaskResponse createTask(TaskRequest taskRequest, String email);
 
-    void deleteTask(Long taskId);
+    void softdeleteTask(Long taskId);
 
     List<TaskListResponse> getAllTasks(String email);
 
@@ -33,6 +33,10 @@ public interface TaskService {
     List<TaskListResponse> getTasksByCurrentUserandPriority(String email, Priority priority);
 
     List<TaskStatusSummary> getTaskStatusSummary(String email);
+
+    void recoverTask(Long taskId, String email);
+
+    List<Task> getRecoverableTasks(String email);
 
 
 }

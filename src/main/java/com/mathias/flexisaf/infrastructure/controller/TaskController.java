@@ -31,9 +31,9 @@ public class TaskController {
         return ResponseEntity.ok(taskResponse);
     }
 
-    @DeleteMapping("delete")
+    @PostMapping("/delete")
     public ResponseEntity<?> deleteTask(@RequestParam Long taskId){
-        taskService.deleteTask(taskId);
+        taskService.softdeleteTask(taskId);
         return ResponseEntity.ok("Task Deleted Successfully");
     }
 
@@ -113,5 +113,21 @@ public class TaskController {
         String currentUsername = authentication.getName();
         List<TaskStatusSummary> response = taskService.getTaskStatusSummary(currentUsername);
         return ResponseEntity.ok(response);
+   }
+
+   @PostMapping("/recover-tasks")
+    public ResponseEntity<?> recoverTasks(@RequestParam Long taskId){
+       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+       String currentUsername = authentication.getName();
+       taskService.recoverTask(taskId,currentUsername);
+       return ResponseEntity.ok("Task Recovery Successfully");
+   }
+
+   @GetMapping("/recoverable")
+    public ResponseEntity<?> getRecoverableTasks(){
+       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+       String currentUsername = authentication.getName();
+       List<Task> response = taskService.getRecoverableTasks(currentUsername);
+       return ResponseEntity.ok(response);
    }
 }

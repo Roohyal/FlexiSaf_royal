@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,11 +53,13 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void deleteTask(Long taskId) {
-        if(!taskRepository.existsById(taskId)) {
-            throw new RuntimeException("Task not found");
-        }
-        taskRepository.deleteById(taskId);
+    public void softdeleteTask(Long taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        task.setDeleted(true);
+        task.setDeletedAt(LocalDateTime.now());
+        taskRepository.save(task);
+
     }
 
     @Override
@@ -98,7 +101,7 @@ public class TaskServiceImpl implements TaskService {
     public List<TaskListResponse> getCurrentUserTasks(String email) {
         personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
 
-        List<Task> tasks = taskRepository.findByUserEmail(email);
+        List<Task> tasks = taskRepository.findByUserEmailAndDeleted(email, false);
 
 
         // Use the builder pattern for each Task and collect as TaskListResponse
@@ -118,7 +121,7 @@ public class TaskServiceImpl implements TaskService {
     public List<TaskListResponse> getTasksByCurrentUserAndStatus(String email, Status status) {
         personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
 
-        List<Task> tasks = taskRepository.findByUserEmailAndStatus(email, status);
+        List<Task> tasks = taskRepository.findByUserEmailAndStatusAndDeletedFalse(email, status);
 
         return tasks.stream()
                 .map(task -> TaskListResponse.builder()
@@ -136,7 +139,7 @@ public class TaskServiceImpl implements TaskService {
     public List<TaskListResponse> getCompletedTasksForCurrentUser(String email) {
         personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
 
-        List<Task> tasks = taskRepository.findByUserEmailAndStatus(email, Status.COMPLETED);
+        List<Task> tasks = taskRepository.findByUserEmailAndStatusAndDeletedFalse(email, Status.COMPLETED);
 
         return tasks.stream()
                 .map(task -> TaskListResponse.builder()
@@ -157,6 +160,7 @@ public class TaskServiceImpl implements TaskService {
 
         Task task = taskRepository.findById(taskId).orElseThrow(()-> new NotFoundException("Task not found"));
 
+
         task.setStatus(status);
 
         return taskRepository.save(task);
@@ -164,21 +168,34 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task getTaskById(Long taskId, String title, String email) {
+        Task task;
+
         if (taskId != null) {
-            return taskRepository.findById(taskId)
+            task = taskRepository.findById(taskId)
                     .orElseThrow(() -> new NotFoundException("Task not found with id " + taskId));
         } else if (title != null && !title.isEmpty()) {
-            return taskRepository.findByTaskNameIgnoreCase(title)
+            task = taskRepository.findByTaskNameIgnoreCase(title)
                     .orElseThrow(() -> new NotFoundException("Task not found with title " + title));
+        } else {
+            throw new IllegalArgumentException("Both id and title are null");
         }
-        throw new IllegalArgumentException("Both id and title are null");
+
+        // Check if the task is deleted
+        if (task.isDeleted()) {
+            throw new NotFoundException("Task with " +
+                    (taskId != null ? "id " + taskId : "title '" + title + "'") +
+                    " has been deleted and cannot be found.");
+        }
+
+        return task;
     }
+
 
     @Override
     public List<TaskListResponse> getTasksByCurrentUserandPriority(String email, Priority priority) {
         personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
 
-        List<Task> tasks = taskRepository.findByUserEmailAndPriority(email, priority);
+        List<Task> tasks = taskRepository.findByUserEmailAndPriorityAndDeletedFalse(email, priority);
 
         return tasks.stream()
                 .map(task -> TaskListResponse.builder()
@@ -198,9 +215,9 @@ public class TaskServiceImpl implements TaskService {
     public List<TaskStatusSummary> getTaskStatusSummary(String email) {
         personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
 
-        Long pending = taskRepository.countByStatus(Status.PENDING);
-        Long completed = taskRepository.countByStatus(Status.COMPLETED);
-        Long inProgress = taskRepository.countByStatus(Status.IN_PROGRESS);
+        Long pending = taskRepository.countByStatusAndDeletedFalse(Status.PENDING);
+        Long completed = taskRepository.countByStatusAndDeletedFalse(Status.COMPLETED);
+        Long inProgress = taskRepository.countByStatusAndDeletedFalse(Status.IN_PROGRESS);
 
         Long total = pending + completed + inProgress;
 
@@ -213,6 +230,31 @@ public class TaskServiceImpl implements TaskService {
                 .build();
 
         return Collections.singletonList(taskStatusSummary);
+    }
+
+    @Override
+    public void recoverTask(Long taskId, String email) {
+        personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
+
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("Task not found with id " + taskId));
+
+        if (task.isDeleted() && task.getDeletedAt().isAfter(LocalDateTime.now().minusDays(30)) ) {
+            task.setDeleted(false);
+            task.setDeletedAt(null);
+            taskRepository.save(task);
+        } else {
+            throw new RuntimeException("Task cannot be recovered");
+        }
+
+    }
+
+    @Override
+    public List<Task> getRecoverableTasks(String email) {
+        personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
+
+        LocalDateTime cutOffDate = LocalDateTime.now().minusDays(30);
+
+        return taskRepository.findRecoverableTasks(cutOffDate);
     }
 
 
