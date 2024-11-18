@@ -9,6 +9,7 @@ import com.mathias.flexisaf.payload.request.TaskRequest;
 import com.mathias.flexisaf.payload.request.TaskUpdateRequest;
 import com.mathias.flexisaf.payload.response.TaskListResponse;
 import com.mathias.flexisaf.payload.response.TaskResponse;
+import com.mathias.flexisaf.payload.response.TaskStatusSummary;
 import com.mathias.flexisaf.repository.PersonRepository;
 import com.mathias.flexisaf.repository.TaskRepository;
 import com.mathias.flexisaf.service.TaskService;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -166,7 +168,7 @@ public class TaskServiceImpl implements TaskService {
             return taskRepository.findById(taskId)
                     .orElseThrow(() -> new NotFoundException("Task not found with id " + taskId));
         } else if (title != null && !title.isEmpty()) {
-            return taskRepository.findByTaskName(title)
+            return taskRepository.findByTaskNameIgnoreCase(title)
                     .orElseThrow(() -> new NotFoundException("Task not found with title " + title));
         }
         throw new IllegalArgumentException("Both id and title are null");
@@ -190,6 +192,27 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toList());
 
 
+    }
+
+    @Override
+    public List<TaskStatusSummary> getTaskStatusSummary(String email) {
+        personRepository.findByEmail(email).orElseThrow(()-> new NotFoundException("User not found"));
+
+        Long pending = taskRepository.countByStatus(Status.PENDING);
+        Long completed = taskRepository.countByStatus(Status.COMPLETED);
+        Long inProgress = taskRepository.countByStatus(Status.IN_PROGRESS);
+
+        Long total = pending + completed + inProgress;
+
+
+        TaskStatusSummary taskStatusSummary = TaskStatusSummary.builder()
+                .completed(completed)
+                .inProgress(inProgress)
+                .pending(pending)
+                .totalTasks(total)
+                .build();
+
+        return Collections.singletonList(taskStatusSummary);
     }
 
 

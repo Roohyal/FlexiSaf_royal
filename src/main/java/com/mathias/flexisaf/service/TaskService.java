@@ -7,6 +7,7 @@ import com.mathias.flexisaf.payload.request.TaskRequest;
 import com.mathias.flexisaf.payload.request.TaskUpdateRequest;
 import com.mathias.flexisaf.payload.response.TaskListResponse;
 import com.mathias.flexisaf.payload.response.TaskResponse;
+import com.mathias.flexisaf.payload.response.TaskStatusSummary;
 
 import java.util.List;
 
@@ -30,6 +31,8 @@ public interface TaskService {
     Task getTaskById(Long taskId, String title, String email);
 
     List<TaskListResponse> getTasksByCurrentUserandPriority(String email, Priority priority);
+
+    List<TaskStatusSummary> getTaskStatusSummary(String email);
 
 
 }

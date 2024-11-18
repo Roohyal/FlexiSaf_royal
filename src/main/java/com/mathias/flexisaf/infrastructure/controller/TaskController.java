@@ -7,6 +7,7 @@ import com.mathias.flexisaf.payload.request.TaskRequest;
 import com.mathias.flexisaf.payload.request.TaskUpdateRequest;
 import com.mathias.flexisaf.payload.response.TaskListResponse;
 import com.mathias.flexisaf.payload.response.TaskResponse;
+import com.mathias.flexisaf.payload.response.TaskStatusSummary;
 import com.mathias.flexisaf.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -104,5 +105,13 @@ public class TaskController {
        String currentUsername = authentication.getName();
        List<TaskListResponse> response = taskService.getTasksByCurrentUserandPriority(currentUsername,priority);
        return ResponseEntity.ok(response);
+   }
+
+   @GetMapping("/task-summary")
+    public ResponseEntity<?> getTaskSummary(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        List<TaskStatusSummary> response = taskService.getTaskStatusSummary(currentUsername);
+        return ResponseEntity.ok(response);
    }
 }
