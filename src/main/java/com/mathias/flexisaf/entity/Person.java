@@ -22,9 +22,10 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class Person extends BaseClass implements UserDetails {
-    @NotBlank(message = "Full name is required")
+    @NotBlank(message = "First name is required")
     private String firstName;
 
+    @NotBlank(message = "Last name is required")
     private String lastName;
 
     @NotBlank(message = "Email is required")
@@ -43,12 +44,13 @@ public class Person extends BaseClass implements UserDetails {
 
     private LocalDate dateOfBirth;
 
-
     // this token is to handle reset password
     private String resetToken;
 
     // monitor token creation time and expiration time
     private LocalDateTime resetTokenCreationTime;
+
+    private String notificationToken = "default-token";
 
     @Transient
     private String confirmPassword;
